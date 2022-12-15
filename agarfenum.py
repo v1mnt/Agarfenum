@@ -106,8 +106,9 @@ user_agent_list = [
     'Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; MDDCJS; rv:11.0) like Gecko'
 ]
 
-if(options.url[-1::] == "/"):
-    options.url = options.url[:-1]
+if options.url != None:
+    if(options.url[-1::] == "/"):
+        options.url = options.url[:-1]
 
 if( options.url and options.file != None):
     if "http://" not in options.url and "https://" not in options.url:
