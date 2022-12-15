@@ -122,18 +122,15 @@ if( options.url and options.file != None):
             for directory in wordlist:
                 user_agent = random.choice(user_agent_list)
                 number += 1
-                time.sleep(0.5)
+                time.sleep(1)
                 x = requests.get("{}/{}".format(options.url, directory.strip()), allow_redirects=True, headers = {'User-Agent': user_agent + str(number)})
                 statusc = x.status_code
-                if(statusc == 200 and statusc == 302):
+                if(statusc == 200):
                     print("{}/{} - {}{}{}".format(options.url, directory.strip(), bcolors.green, statusc, bcolors.reset))
                 elif (statusc == 301):
                     print("{}/{} - {}{}{}".format(options.url, directory.strip(), bcolors.blue, statusc, bcolors.reset))
                 elif (statusc == 403 and statusc == 501):
                     print("{}/{} - {}{}{}".format(options.url, directory.strip(), bcolors.yellow, statusc, bcolors.reset))
-                else:
-                    if(options.error):
-                        print("{}/{} - {}{}{}".format(options.url, directory.strip(), bcolors.red, statusc, bcolors.reset))
             filename.close()
     else:
         for directory in wordlist:
@@ -150,9 +147,6 @@ if( options.url and options.file != None):
                     print("{}/{} - {}{}{}".format(options.url, directory.strip(), bcolors.blue, statusc, bcolors.reset))
                 elif (statusc == 403 or statusc == 501):
                     print("{}/{} - {}{}{}".format(options.url, directory.strip(), bcolors.yellow, statusc, bcolors.reset))
-                else:
-                    if(options.error):
-                        print("{}/{} - {}{}{}".format(options.url, directory.strip(), bcolors.red, statusc, bcolors.reset))
         filename.close()
 else:
     Usage()
