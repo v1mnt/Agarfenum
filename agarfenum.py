@@ -6,6 +6,7 @@ parser = OptionParser()
 parser.add_option('-u', '--url', dest = 'url', type = 'string')
 parser.add_option('-w', '--wordlist', dest = 'file', metavar = "FILE")
 parser.add_option('-s', '--status-code', dest = 'code', type = 'int')
+parser.add_option('--delay', dest = 'delay', type = 'int')
 parser.add_option('--waf-bypass', action='store_true', dest='waf')
 parser.add_option('--show-errors', action='store_true', dest='error')
 (options, args) = parser.parse_args()
@@ -27,7 +28,10 @@ agarfenum.py -u http://host.com -w /path/to/the/file
 {}OPTIONS:{}
 -w, --wordlist <FILE>   Wordlist path
 -u, --url <URL>         The target URL
---waf-bypass            Alias for --random-user-agent '''.format(bcolors.red, bcolors.reset,bcolors.red, bcolors.reset,bcolors.red, bcolors.reset))
+--waf-bypass            Alias for --random-user-agent 
+--show-errors           Display errors
+--delay                 continuar depois
+-s, --status-code       Filter out status codes'''.format(bcolors.red, bcolors.reset,bcolors.red, bcolors.reset,bcolors.red, bcolors.reset))
 
 
 user_agent_list = [
@@ -106,47 +110,71 @@ user_agent_list = [
     'Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; MDDCJS; rv:11.0) like Gecko'
 ]
 
-if options.url != None:
+def bypass_waf():
+    print("{}[!] WAF bypass enabled, the scan will take a little longer{}".format(bcolors.yellow, bcolors.reset))
+    number = 0
+    for directory in wordlist:
+        user_agent = random.choice(user_agent_list)
+        number += 1
+        time.sleep(options.delay or 1)
+        x = requests.get("{}/{}".format(options.url, directory.strip()), allow_redirects=True, headers = {'User-Agent': user_agent + str(number)})
+        statusc = x.status_code
+        if(statusc == 200 and statusc == 302):
+            print("{}/{} - {}{}{}".format(options.url, directory.strip(), bcolors.green, statusc, bcolors.reset))
+        elif (statusc == 301):
+            print("{}/{} - {}{}{}".format(options.url, directory.strip(), bcolors.blue, statusc, bcolors.reset))
+        elif (statusc == 403 and statusc == 501):
+            print("{}/{} - {}{}{}".format(options.url, directory.strip(), bcolors.yellow, statusc, bcolors.reset))
+        else:
+            if(options.error):
+                print("{}/{} - {}{}{}".format(options.url, directory.strip(), bcolors.red, statusc, bcolors.reset))
+    filename.close()
+
+
+def default():
+    for directory in wordlist:
+        user_agent = random.choice(user_agent_list)
+        x = requests.get("{}/{}".format(options.url, directory.strip()), allow_redirects=True, headers = {'User-Agent': user_agent})
+        statusc = x.status_code
+        if(options.code):
+            if(options.code == statusc):
+                print("{}/{} - {}{}{}".format(options.url, directory.strip(), bcolors.green, statusc, bcolors.reset))
+        else:
+            if(statusc == 200 or statusc == 302):
+                print("{}/{} - {}{}{}".format(options.url, directory.strip(), bcolors.green, statusc, bcolors.reset))
+            elif (statusc == 301):
+                print("{}/{} - {}{}{}".format(options.url, directory.strip(), bcolors.blue, statusc, bcolors.reset))
+            elif (statusc == 403 or statusc == 501):
+                print("{}/{} - {}{}{}".format(options.url, directory.strip(), bcolors.yellow, statusc, bcolors.reset))
+            else:
+                if(options.error):
+                    print("{}/{} - {}{}{}".format(options.url, directory.strip(), bcolors.red, statusc, bcolors.reset))
+    filename.close()
+
+try:
     if(options.url[-1::] == "/"):
         options.url = options.url[:-1]
 
-if( options.url and options.file != None):
-    if "http://" not in options.url and "https://" not in options.url:
-        print('Missing "http://" or "https://" in url :)')
-        exit()
-    filename = open(options.file)
-    wordlist = filename.readlines()
-    number = 0
-    if (options.waf):
-            print("{}[!] WAF bypass enabled, the scan will take a little longer{}".format(bcolors.yellow, bcolors.reset))
-            for directory in wordlist:
-                user_agent = random.choice(user_agent_list)
-                number += 1
-                time.sleep(1)
-                x = requests.get("{}/{}".format(options.url, directory.strip()), allow_redirects=True, headers = {'User-Agent': user_agent + str(number)})
-                statusc = x.status_code
-                if(statusc == 200):
-                    print("{}/{} - {}{}{}".format(options.url, directory.strip(), bcolors.green, statusc, bcolors.reset))
-                elif (statusc == 301):
-                    print("{}/{} - {}{}{}".format(options.url, directory.strip(), bcolors.blue, statusc, bcolors.reset))
-                elif (statusc == 403 and statusc == 501):
-                    print("{}/{} - {}{}{}".format(options.url, directory.strip(), bcolors.yellow, statusc, bcolors.reset))
-            filename.close()
+    if( options.url and options.file != None):
+        if "http://" not in options.url and "https://" not in options.url:
+            print('Missing "http://" or "https://" in url :)')
+            exit()
+        filename = open(options.file)
+        wordlist = filename.readlines()
+        number = 0
+        if (options.waf):
+            bypass_waf()
+        else:
+            default()
     else:
-        for directory in wordlist:
-            user_agent = random.choice(user_agent_list)
-            x = requests.get("{}/{}".format(options.url, directory.strip()), allow_redirects=True, headers = {'User-Agent': user_agent})
-            statusc = x.status_code
-            if(options.code):
-                if(options.code == statusc):
-                    print("{}/{} - {}{}{}".format(options.url, directory.strip(), bcolors.green, statusc, bcolors.reset))
-            else:
-                if(statusc == 200 or statusc == 302):
-                    print("{}/{} - {}{}{}".format(options.url, directory.strip(), bcolors.green, statusc, bcolors.reset))
-                elif (statusc == 301):
-                    print("{}/{} - {}{}{}".format(options.url, directory.strip(), bcolors.blue, statusc, bcolors.reset))
-                elif (statusc == 403 or statusc == 501):
-                    print("{}/{} - {}{}{}".format(options.url, directory.strip(), bcolors.yellow, statusc, bcolors.reset))
-        filename.close()
-else:
-    Usage()
+        Usage()
+except KeyboardInterrupt:
+    print("{}\n[+] Bye :){}".format(bcolors.green, bcolors.reset))
+except FileNotFoundError:
+    print("{}[!] No such file or directory{}".format(bcolors.yellow, bcolors.reset))
+except requests.exceptions.ConnectionError:
+    print("{}[!] A connection error occurred :( Please check the URL and try again.".format(bcolors.yellow, bcolors.reset))
+except requests.exceptions.HTTPError:
+    print("{}[!] An HTTP error occurred{}".format(bcolors.yellow, bcolors.reset))
+except requests.exceptions.RequestException:
+    print("{}[!] An error occurred while making the request{}".format(bcolors.yellow, bcolors.reset))
