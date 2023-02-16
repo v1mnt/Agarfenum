@@ -30,7 +30,7 @@ agarfenum.py -u http://host.com -w /path/to/the/file
 -u, --url <URL>         The target URL
 --waf-bypass            Alias for --random-user-agent 
 --show-errors           Display errors
---delay                 continuar depois
+--delay                 Time each thread waits between requests (default is 1)
 -s, --status-code       Filter out status codes'''.format(bcolors.red, bcolors.reset,bcolors.red, bcolors.reset,bcolors.red, bcolors.reset))
 
 
