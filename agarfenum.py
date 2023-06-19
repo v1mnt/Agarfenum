@@ -1,4 +1,4 @@
-import requests, random, time
+import requests, random, time, sys
 from optparse import OptionParser
 
 parser = OptionParser()
@@ -32,6 +32,10 @@ agarfenum.py -u http://host.com -w /path/to/the/file
 --show-errors           Display errors
 --delay                 Time each thread waits between requests (default is 1)
 -s, --status-code       Filter out status codes'''.format(bcolors.red, bcolors.reset,bcolors.red, bcolors.reset,bcolors.red, bcolors.reset))
+    
+ if len(sys.argv) < 2:
+    Usage()
+    sys.exit(1)
 
 
 user_agent_list = [
